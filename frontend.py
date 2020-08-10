@@ -104,6 +104,10 @@ class Window(object):
         deleteBtn.config(width=13)
         deleteBtn.grid(row=10,column=1,ipady=5)
 
+        self.errorTextVar = StringVar()
+        errorLbl = Label(window, textvariable=self.errorTextVar)
+        errorLbl.grid(row=9,column=2)
+
     def getSelection(self,event):
         if self.list.curselection() != ():
             index = self.list.curselection()[0]
@@ -128,10 +132,14 @@ class Window(object):
             self.list.insert(END,row[1])
 
     def add_command(self):
-        ingredientList = self.ingredientsVar.get().lower().split(", ")
-        db.insert(self.nameVar.get(), self.urlVar.get(), self.tagVar.get().title(), ingredientList)
-        self.list.delete(0,END)
-        self.list.insert(END,self.nameVar.get())
+        if self.nameVar.get() == "":
+            self.errorMessage("name")
+        else:
+            ingredientList = self.ingredientsVar.get().lower().split(", ")
+            db.insert(self.nameVar.get(), self.urlVar.get(), self.tagVar.get().title(), ingredientList)
+            self.list.delete(0,END)
+            self.list.insert(END,self.nameVar.get())
+            self.errorTextVar.set("")
 
     def delete_command(self):
         id = db.getRecipe(self.selection)[0][0]
@@ -140,10 +148,13 @@ class Window(object):
         self.clear_command()
 
     def update_command(self):
-        recipe = db.getRecipe(self.selection)
-        db.update(recipe[0][0], self.nameVar.get(), self.urlVar.get(), self.tagVar.get().title(), self.ingredientsVar.get().lower().split(", "))
-        self.view_command()
-        self.clear_command()
+        if self.nameVar.get() == "":
+            self.errorMessage("name")
+        else:
+            recipe = db.getRecipe(self.selection)
+            db.update(recipe[0][0], self.nameVar.get(), self.urlVar.get(), self.tagVar.get().title(), self.ingredientsVar.get().lower().split(", "))
+            self.view_command()
+            self.clear_command()
 
     def clear_command(self):
         self.ingredientSearchEntry.delete(0,END)
@@ -154,7 +165,9 @@ class Window(object):
         self.tagEntry.delete(0,END)
         self.window.update()
 
-
+    def errorMessage(self, error):
+        if error == "name":
+            self.errorTextVar.set("Please enter a name")
 
 window = Tk()
 Window(window)
